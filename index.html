@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pic Edit Pro - জামা চেঞ্জ App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Preview Area */
+        .preview {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        #canvas {
+            max-width: 100%;
+            max-height: 100%;
+            border: 3px solid #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            cursor: grab;
+        }
+
+        #canvas:active {
+            cursor: grabbing;
+        }
+
+        /* Control Panel */
+        .controls {
+            width: 400px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            overflow-y: auto;
+            box-shadow: -10px 0 30px rgba(0,0,0,0.2);
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9ff;
+            border-radius: 15px;
+            border: 2px solid #e1e5ff;
+        }
+
+        .section h3 {
+            color: #4a55a2;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* File Upload */
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            height: 120px;
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(102,126,234,0.1);
+        }
+
+        .file-upload:hover {
+            border-color: #764ba2;
+            background: rgba(118,75,162,0.2);
+        }
+
+        .file-upload input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        /* Sliders */
+        .slider-group {
+            margin: 15px 0;
+        }
+
+        .slider-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e1e5ff;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        /* Buttons */
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102,126,234,0.4);
+        }
+
+        .btn-secondary {
+            background: #f8f9ff;
+            color: #667eea;
+            border: 2px solid #e1e5ff;
+        }
+
+        /* Cloth Gallery */
+        .cloth-gallery {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .cloth-item {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            object-fit: cover;
+        }
+
+        .cloth-item:hover,
+        .cloth-item.active {
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: 100vh;
+            }
+            .controls {
+                width: 100%;
+                height: 50vh;
+                overflow-y: auto;
+            }
+            .preview {
+                height: 50vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Preview Canvas -->
+        <div class="preview">
+            <canvas id="canvas"></canvas>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="controls">
+            <!-- Upload Section -->
+            <div class="section">
+                <h3> ছবি আপলোড করুন</h3>
+                <div class="file-upload">
+                    <input type="file" id="imageUpload" accept="image/*">
+                    <svg width="40" height="40" fill="#667eea" viewBox="0 0 24 24">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                        <circle cx="12" cy="4" r="2"/>
+                    </svg>
+                    <div style="color: #667eea; font-weight: bold; margin-top: 10px;">
+                        ছবি নির্বাচন করুন
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cloth Change -->
+            <div class="section">
+                <h3>👕 নতুন জামা চয়ন করুন</h3>
+                <div class="cloth-gallery" id="clothGallery">
+                    <!-- Shirts will be loaded here -->
+                </div>
+                <button class="btn btn-primary" onclick="applyCloth()">জামা যোগ করুন</button>
+            </div>
+
+            <!-- Color Edit -->
+            <div class="section">
+                <h3> রং এডিট</h3>
+                <div class="slider-group">
+                    <label>উজ্জ্বলতা (Brightness)</label>
+                    <input type="range" id="brightness" min="-100" max="100" value="0">
+                    <span id="brightnessValue">0</span>
+                </div>
+                <div class="slider-group">
+                    <label>কনট্রাস্ট</label>
+                    <input type="range" id="contrast" min="0" max="200" value="100">
+                    <span id="contrastValue">100</span>
+                </div>
+                <div class="slider-group">
+                    <label>স্যাচুরেশন</label>
+                    <input type="range" id="saturation" min="0" max="200" value="100">
+                    <span id="saturationValue">100</span>
+                </div>
+                <div class="slider-group">
+                    <label>হুয় (Hue)</label>
+                    <input type="range" id="hue" min="0" max="360" value="0">
+                    <span id="hueValue">0</span>
+                </div>
+            </div>
+
+            <!-- Export -->
+            <div class="section">
+                <button class="btn btn-primary" onclick="exportImage()">💾 4K HD Download</button>
+                <button class="btn btn-secondary" onclick="resetImage()">🔄 Reset</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.⁵tElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        let img = new Image();
+        let currentCloth = null;
+        let isDragging = false;
+        let dragOffset = { x: 0, y: 0 };
+
+        // const cloths = [...]
+        const cloths = [
+    'shirt1.png',
+    'shirt2.png',
+    'shirt3.png'
+];
+        // Load image
+        document.getElementById('imageUpload').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        draw();
+                    }
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Load cloth gallery
+        function loadClothGallery() {
+            const gallery = document.getElementById('clothGallery');
+            gallery.innerHTML = '';
+            cloths.forEach((cloth, index) => {
+                const img = document.createElement('img');
+                img.src = cloth;
+                img.className = 'cloth-item';
+                img.onclick = () => selectCloth(index);
+                gallery.appendChild(img);
+            });
+        }
+
+        function selectCloth(index, e) {
+    document.querySelectorAll('.cloth-item').forEach(el => el.classList.remove('active'));
+    e.target.classList.add('active');
+    currentCloth = cloths[index];
+        
+        }
+
+        // Apply cloth
+        function applyCloth() {
+            if (!currentCloth || !img.src) return;
+            
+            const clothImg = new Image();
+            clothImg.src = currentCloth;
+            clothImg.onload = () => {
+                // Simple overlay (you can enhance with AI segmentation)
+                ctx.globalAlpha = 0.8;
+                ctx.drawImage(clothImg, 50, 100, 200, 250);
+                ctx.globalAlpha = 1;
+                draw();
+            }
+        }
+
+        // Color filters
+        function applyFilters() {
+            const brightness = document.getElementById('brightness').value / 100;
+            const contrast = document.getElementById('contrast').value / 100;
+            const saturation = document.getElementById('saturation').value / 100;
+            const hue = document.getElementById('hue').value * Math.PI / 180;
+
+            ctx.filter = `brightness(${1 + brightness}) contrast(${contrast}) saturate(${saturation}) hue-rotate(${document.getElementById('hue').value}deg)`;
+        }
+
+        // Draw function
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            applyFilters();
+            ctx.drawImage(img, 0, 0);
+            ctx.filter = 'none';
+        }
+
+        // Slider events
+        ['brightness', 'contrast', 'saturation', 'hue'].forEach(id => {
+            const slider = document.getElementById(id);
+            const valueSpan = document.getElementById(id + 'Value');
+            
+            slider.addEventListener('input', function() {
+                valueSpan.textContent = this.value;
+                if (img.src) draw();
+            });
+        });
+
+        // Drag functionality
+        canvas.addEventListener('mousedown', startDrag);
+        canvas.addEventListener('mousemove', drag);
+        canvas.addEventListener('mouseup', stopDrag);
+        canvas.addEventListener('mouseleave', stopDrag);
+
+        function startDrag(e) {
+            isDragging = true;
+            const rect = canvas.getBoundingClientRect();
+            dragOffset.x = e.clientX - rect.left;
+            dragOffset.y = e.clientY - rect.top;
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            const rect = canvas.getBoundingClientRect();
+            // Implement drag logic here
+        }
+
+        function stopDrag() {
+            isDragging = false;
+        }
+
+        // Export 4K
+        function exportImage() {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'edited-pic-4k.png';
+                a.click();
+            }, 'image/png', 1.0);
+        }
+
+        function resetImage() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            document.querySelectorAll('input[type="range"]').forEach(slider => {
+                slider.value = slider.defaultValue;
+                document.getElementById(slider.id + 'Value').textContent = slider.defaultValue;
+            });
+        }
+
+        // Initialize
+        loadClothGallery();
+    </script>
+</body>
+  </html>
