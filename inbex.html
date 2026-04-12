@@ -1,0 +1,27 @@
+function askAI() {
+    const userIn = document.getElementById('userIn').value.trim(); // স্পেস কেটে দিবে
+    const chat = document.getElementById('chat');
+    
+    // লোকাল স্টোরেজ থেকে ডাটা আনা
+    const brain = JSON.parse(localStorage.getItem('ai_brain') || '{}');
+
+    if(!userIn) return;
+
+    // ইউজার মেসেজ দেখানো
+    chat.innerHTML += `<div class="msg user-msg">${userIn}</div>`;
+
+    setTimeout(() => {
+        // ছোট হাতের অক্ষরে রূপান্তর করে চেক করা
+        let reply = brain[userIn.toLowerCase()]; 
+        
+        if(!reply) {
+            reply = "দুঃখিত, এই কমান্ডটি আমার জানা নেই। অ্যাডমিন প্যানেলে এটি সেভ করুন।";
+        }
+        
+        chat.innerHTML += `<div class="msg ai-msg"><b>AI:</b> ${reply}</div>`;
+        chat.scrollTop = chat.scrollHeight;
+    }, 500);
+
+    document.getElementById('userIn').value = '';
+}
+
